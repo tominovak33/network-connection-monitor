@@ -1,24 +1,38 @@
 import MySQLdb
 import MySQLdb.cursors
 import subprocess
+import sqlalchemy
+from sqlalchemy import *
 
 
 class NetworkConnectionMonitor:
 
     def __init__(self, database_details):
+        self.engine = None
         self.database_connection = None
         self.success_status = None
-        self.db_connect(database_details)
+        self.db = Database()
+        self.db_tables()
         print "Network Connection Monitor Started"
 
-    def db_connect(self, database_details):
-        self.database_connection = MySQLdb.connect(
-            host=database_details.get('db_host'),
-            db=database_details.get('db_name'),
-            user=database_details.get('db_username'),
-            passwd=database_details.get('db_password'),
-            cursorclass=MySQLdb.cursors.DictCursor
-        )
+    def db_tables(self):
+        metadata = self.db.get_metadata()
+        self.connection_check = Table('connection_check', metadata,
+                         Column('id', Integer, primary_key=True),
+                         Column('check_name', String(64)),
+                         Column('ip', String(16)),
+                         Column('description', String(255)),
+                        )
+
+        self.connection_check_event = Table('connection_check_event', metadata,
+                            Column('id', Integer, primary_key=True),
+                            Column('timestamp', TIMESTAMP(timezone=true), default=func.now()),
+                            Column('connection_check_type', Integer),
+                            Column('status', Integer),
+                            ForeignKeyConstraint(['connection_check_type'], ['connection_check.id']),
+                            )
+
+        metadata.create_all()
 
     def check_conenction(self):
         address = '8.8.8.8'
@@ -43,17 +57,20 @@ class NetworkConnectionMonitor:
         return res
 
     def store_check_status(self):
-        cursor = self.database_connection.cursor()
+        ins = self.connection_check_event.insert().values(connection_check_type=1, status=self.success_status)
+        self.db.get_connection().execute(ins)
+        # self.db.get_connection().commit()
+
         # "INSERT INTO connection_check VALUES ({1}".(self.get_success_status()))
         #sql = "INSERT INTO connection_check (`success`) VALUES ({0})".format(self.get_success_status())
         #print sql
         #return
         # cursor.execute("""INSERT INTO connection_check VALUES (%s)""", (self.get_success_status()))
 
-        cursor.execute('''INSERT into connection_check (success) values (%s)''', ('1'))
-        # cursor.execute(sql)
-        self.database_connection.commit()
-        cursor.close()
+        # cursor.execute('''INSERT into connection_check (success) values (%s)''', ('1'))
+        # # cursor.execute(sql)
+        # self.database_connection.commit()
+        # cursor.close()
         return
 
     def set_success_status(self, status):
@@ -66,6 +83,18 @@ class NetworkConnectionMonitor:
         return self.success_status
 
 
+class Database:
+
+    def __init__(self):
+        self.engine = create_engine('mysql://root:root@localhost/practicedb')
+        self.conn = self.engine.connect()
+        self.metadata = MetaData(self.engine)
+
+    def get_connection(self):
+        return self.conn
+
+    def get_metadata(self):
+        return self.metadata
 
 #http://codereview.stackexchange.com/questions/13683/pinging-a-list-of-hosts
 
@@ -82,6 +111,3 @@ ping options
 -W: Timeout: Time to wait for a response, in seconds. The option affects only timeout in absense of any responses, otherwise ping waits for two RTTs.
 
 """
-
-
-
