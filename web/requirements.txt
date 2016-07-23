@@ -1,0 +1,5 @@
+# NetworkConnectionMonitorWebApp
+webapp2==2.5.2
+webob==1.1.1
+Jinja2==2.8
+sqlalchemy
