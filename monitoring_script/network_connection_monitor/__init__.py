@@ -1,7 +1,6 @@
 import MySQLdb
 import MySQLdb.cursors
 import subprocess
-import sqlalchemy
 from sqlalchemy import *
 
 

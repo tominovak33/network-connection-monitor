@@ -1,28 +1,37 @@
 import MySQLdb
 import MySQLdb.cursors
 
+import sqlalchemy
+from sqlalchemy import *
+
 import config
 
 
 class Database:
 
     def __init__(self):
-        self.database_connection = None
-        self.success_status = None
-        self.db_connect(config.DATABASE_DETAILS)
-        print "Network Connection Monitor Started"
+        self.engine = create_engine('mysql://root:root@localhost/practicedb')
+        self.conn = self.engine.connect()
+        self.metadata = MetaData(self.engine)
 
-    def db_connect(self, database_details):
-        self.database_connection = MySQLdb.connect(
-            host=database_details.get('db_host'),
-            db=database_details.get('db_name'),
-            user=database_details.get('db_username'),
-            passwd=database_details.get('db_password'),
-            cursorclass=MySQLdb.cursors.DictCursor
-        )
+    def get_connection(self):
+        return self.conn
 
-    def db_select_query(self, sql_query):
-        cursor = self.database_connection.cursor()
-        cursor.execute(sql_query)
+    def get_metadata(self):
+        return self.metadata
 
-        return cursor.fetchall()
+    def table(self):
+        self.connection_check = Table('connection_check', self.metadata,
+                                      Column('id', Integer, primary_key=True),
+                                      Column('check_name', String(64)),
+                                      Column('ip', String(16)),
+                                      Column('description', String(255)),
+                                      )
+
+        self.connection_check_event = Table('connection_check_event', self.metadata,
+                                            Column('id', Integer, primary_key=True),
+                                            Column('timestamp', TIMESTAMP(timezone=true), default=func.now()),
+                                            Column('connection_check_type', Integer),
+                                            Column('status', Integer),
+                                            ForeignKeyConstraint(['connection_check_type'], ['connection_check.id']),
+                                            )
