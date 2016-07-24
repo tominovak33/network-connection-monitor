@@ -34,5 +34,18 @@
             {% endif %}
         </div>
     </div>
+    <div class="row">
+        <nav>
+            <ul class="pager">
+                <li><a href="?page=1"><<</a></li>
+                <li><a href="?page={{ page_number -1 }}"><</a></li>
+                {% for number in range(page_number, number_of_pages + 1) %}
+                    <li><a href="?page={{ number }}">{{ number }}</a></li>
+                {% endfor %}
+                <li><a href="?page={{ page_number -1 }}">></a></li>
+                <li><a href="?page={{ number_of_pages }}">>></a></li>
+            </ul>
+        </nav>
+    </div>
 </div>
 {% endblock %}

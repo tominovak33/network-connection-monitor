@@ -20,6 +20,9 @@ class Database:
     def get_metadata(self):
         return self.metadata
 
+    def get_engine(self):
+        return self.engine
+
     def table(self):
         self.connection_check = Table('connection_check', self.metadata,
                                       Column('id', Integer, primary_key=True),

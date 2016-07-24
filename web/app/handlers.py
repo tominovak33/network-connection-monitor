@@ -1,6 +1,8 @@
 import webapp2
 import MySQLdb
 from sqlalchemy import *
+from sqlalchemy.orm import sessionmaker
+
 
 import utils
 import templates
@@ -15,6 +17,23 @@ class HomeHandler(webapp2.RequestHandler):
 
 class StatusHandler(webapp2.RequestHandler):
     def get(self):
+
+        if self.request.get('page'):
+            page_number = int(self.request.get('page'))
+        else:
+            page_number = 1
+
+        limit_per_page = 20
+        offset = 0 * limit_per_page if page_number < 1 else (page_number - 1) * limit_per_page
+
+        # self.response.write(page_number)
+        # self.response.write("<br />")
+        #
+        # self.response.write(offset)
+        # self.response.write("<br />")
+        #
+        # self.response.write(limit_per_page)
+        # return
 
         db = database.Database()
         conn = db.get_connection()
@@ -37,7 +56,14 @@ class StatusHandler(webapp2.RequestHandler):
 
         connection_check_events = Table('connection_check_event', metadata, autoload=True)
 
-        stm = select([connection_check_events])
+        session = sessionmaker(bind=db.get_engine())
+        ses = session()
+
+        num_rows = ses.query(self.connection_check_event).count()
+
+        number_of_pages = num_rows / limit_per_page
+
+        stm = select([connection_check_events]).limit(limit_per_page).offset(offset)
         # stm = select([connection_check_events.c.status])
         #
         # stm = select([connection_check_events]).where(and_(connection_check_events.c.status))
@@ -48,7 +74,13 @@ class StatusHandler(webapp2.RequestHandler):
         rs = conn.execute(stm)
         rows = rs.fetchall()
 
-        templates.render_page("status", {'rows': rows}, self)
+        form_variables = {
+            'rows': rows,
+            'page_number': page_number,
+            'number_of_pages': number_of_pages,
+        }
+
+        templates.render_page("status", form_variables, self)
         return
 
 
