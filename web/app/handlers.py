@@ -31,7 +31,9 @@ class StatusHandler(webapp2.RequestHandler):
         # self.response.write(limit_per_page)
         # return
 
-        rows, number_of_pages = abstractions.connection_check_event.get_page(limit_per_page=limit_per_page, offset=offset)
+        cce = abstractions.connection_check_event()
+
+        rows, number_of_pages = cce.get_page(limit_per_page=limit_per_page, offset=offset)
 
         form_variables = {
             'rows': rows,
