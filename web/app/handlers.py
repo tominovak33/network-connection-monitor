@@ -32,13 +32,15 @@ class StatusHandler(webapp2.RequestHandler):
         # return
 
         cce = abstractions.connection_check_event()
-
+        
         rows, number_of_pages = cce.get_page(limit_per_page=limit_per_page, offset=offset)
+        success_ratio = cce.calculate_successful_connecton_ratio()
 
         form_variables = {
             'rows': rows,
             'page_number': page_number,
             'number_of_pages': number_of_pages,
+            'success_ratio': success_ratio,
         }
 
         templates.render_page("status", form_variables, self)

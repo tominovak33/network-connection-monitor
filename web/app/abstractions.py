@@ -36,17 +36,51 @@ class connection_check_event():
         number_of_pages = num_rows / limit_per_page
 
         stm = select([self.connection_check_event]).limit(limit_per_page).offset(offset)
-        # stm = select([connection_check_events.c.status])
+        # stm = select([self.connection_check_event.c.status])
         #
-        # stm = select([connection_check_events]).where(and_(connection_check_events.c.status))
+        # stm = select([self.connection_check_event]).where(and_(self.connection_check_event.c.status))
 
-        # stm = select([connection_check_events]).where(and_(connection_check_events.c.foo > 100,
-        #                                 connection_check_events.c.bar < 1000000))
+        # stm = select([self.connection_check_event]).where(and_(self.connection_check_event.c.foo > 100,
+        #                                 self.connection_check_event.c.bar < 1000000))
 
         rs = self.conn.execute(stm)
         rows = rs.fetchall()
 
         return rows, number_of_pages
 
-    def count_failed_connections(self):
-        pass
+    def get_all_connections(self):
+        stm = select([self.connection_check_event])
+        rs = self.conn.execute(stm)
+        rows = rs.fetchall()
+        return rows
+
+    def count_total_connections(self):
+        # TODO: use a `count` query instead
+        return len(self.get_all_connections()) or 0
+
+    def get_all_successful_connections(self):
+        stm = select([self.connection_check_event]).where(and_(self.connection_check_event.c.status == 1))
+        rs = self.conn.execute(stm)
+        rows = rs.fetchall()
+        return rows
+
+    def count_total_successful_connections(self):
+        # TODO: use a `count` query instead
+        return len(self.get_all_successful_connections()) or 0
+
+    def get_all_failed_connections(self):
+        stm = select([self.connection_check_event]).where(and_(self.connection_check_event.c.status == 0))
+        rs = self.conn.execute(stm)
+        rows = rs.fetchall()
+        return rows
+
+    def count_total_failed_connections(self):
+        # TODO: use a `count` query instead
+        return len(self.get_all_failed_connections()) or 0
+
+    def calculate_successful_connecton_ratio(self):
+        try:
+            return float(self.count_total_successful_connections()) / float(self.count_total_connections())
+        except:
+            # TODO: handle error properly
+            return False
