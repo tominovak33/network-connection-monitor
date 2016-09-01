@@ -1,6 +1,5 @@
 import MySQLdb
 import MySQLdb.cursors
-
 import sqlalchemy
 from sqlalchemy import *
 
